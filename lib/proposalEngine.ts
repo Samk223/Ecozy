@@ -8,7 +8,7 @@ export interface ProposalInput {
 }
 
 export interface Product {
-  id: string;
+  id?: string;
   name: string;
   price: number;
   category: string;
@@ -20,6 +20,7 @@ export interface ProposalResult {
     product: string;
     quantity: number;
     cost: number;
+    environmentalRationale: string;
   }[];
   totalCost: number;
   budgetRemaining: number;
@@ -47,7 +48,8 @@ Instructions:
 1. Select a recommended sustainable product mix from the available products.
 2. Allocate the budget across products (do not exceed the budget).
 3. Provide an estimated cost breakdown (quantity * price).
-4. Generate an impact positioning summary explaining how this proposal helps the environment.
+4. For EACH recommended product, generate a concise but detailed 'environmentalRationale' (1-2 sentences) explaining why THIS SPECIFIC product is a better sustainable choice (e.g., material benefits, carbon reduction, longevity).
+5. Generate an impact positioning summary explaining how this overall proposal helps the environment.
   `.trim();
 
   const response = await ai.models.generateContent({
@@ -66,8 +68,9 @@ Instructions:
                 product: { type: Type.STRING, description: "Product name" },
                 quantity: { type: Type.NUMBER, description: "Quantity recommended" },
                 cost: { type: Type.NUMBER, description: "Total cost for this product" },
+                environmentalRationale: { type: Type.STRING, description: "Detailed environmental benefit for this specific product" },
               },
-              required: ["product", "quantity", "cost"],
+              required: ["product", "quantity", "cost", "environmentalRationale"],
             },
             description: "Recommended products",
           },

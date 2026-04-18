@@ -2,19 +2,21 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Package, Plus, Search, Tag, Leaf, ChevronDown, ChevronUp, Filter, X, ArrowUpDown } from "lucide-react";
+import { Package, Plus, Search, Tag, Leaf, ChevronDown, ChevronUp, Filter, X, ArrowUpDown, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { db, Product } from "@/lib/db";
+import { useStore, Product } from "@/lib/db";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ToastProvider";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function ProductsPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>(() => db.products.getAll());
+  const { products, db } = useStore();
+  const { success, error: toastError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -22,15 +24,22 @@ export default function ProductsPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
+  const handleDelete = async (id: string, name: string) => {
+    console.log("Products Page: Attempting to delete product:", id, name);
+    try {
+      await db.products.delete(id);
+      success(`Product "${name}" deleted`);
+    } catch (err) {
+      console.error("Products Page Delete Error:", err);
+      toastError("Failed to delete product");
+    }
+  };
+
   // Filters & Sorting
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
   const [isFiltering, setIsFiltering] = useState(false);
-
-  useEffect(() => {
-    // State is now initialized synchronously
-  }, []);
 
   // Extract unique categories and filters
   const allCategories = useMemo(() => Array.from(new Set(products.map(p => p.category))), [products]);
@@ -281,14 +290,19 @@ export default function ProductsPage() {
                     >
                       <Card 
                         className="h-full flex flex-col cursor-pointer transition-all duration-300 hover:shadow-[0_10px_30px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 overflow-hidden"
-                        onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
+                        onClick={() => setExpandedId(expandedId === product.id ? null : (product.id ?? null))}
                       >
                         <CardHeader className="pb-4">
                           <div className="flex justify-between items-start mb-2">
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-medium">
                               {product.category}
                             </Badge>
-                            <span className="font-bold text-lg text-slate-100">${product.price.toFixed(2)}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-lg text-slate-100">${product.price.toFixed(2)}</span>
+                              <button onClick={(e) => { e.stopPropagation(); if (product.id) handleDelete(product.id, product.name); }} className="text-slate-500 hover:text-red-400 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                           <CardTitle className="text-xl leading-tight">{product.name}</CardTitle>
                           <CardDescription className="text-slate-400 line-clamp-2 mt-2">{product.description}</CardDescription>
@@ -407,25 +421,4 @@ export default function ProductsPage() {
       )}
     </motion.div>
   );
-}
-
-// Add CheckCircle2 icon component since it's used but not imported
-function CheckCircle2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  )
 }

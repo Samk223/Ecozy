@@ -10,11 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { generateProductCategorization, ProductInput, CategorizationResult } from "@/lib/categorizer";
-import { db } from "@/lib/db";
+import { useStore } from "@/lib/db";
+import { useToast } from "@/components/ToastProvider";
 import Link from "next/link";
 
 export default function AddProductPage() {
   const router = useRouter();
+  const { db } = useStore();
+  const { success, error: toastError } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState<ProductInput>({
@@ -42,36 +45,22 @@ export default function AddProductPage() {
     try {
       // 1. Call AI to categorize
       const { result, prompt, rawResponse } = await generateProductCategorization(formData);
-      
-      // 2. Call API route to validate and save (demonstrates architecture)
-      const apiResponse = await fetch("/api/categorize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product: formData,
-          aiResult: result,
-          log: { prompt, rawResponse },
-        }),
-      });
 
-      if (!apiResponse.ok) {
-        throw new Error("API validation failed");
-      }
-
-      // 3. Save to local storage for UI persistence
-      db.aiLogs.add({
+      // 2. Save directly to Firestore using our secure hook
+      await db.aiLogs.add({
         module: "categorization",
         prompt,
         response: rawResponse,
       });
 
-      db.products.add({
+      await db.products.add({
         ...formData,
         ...result,
       });
 
       setAiResult(result);
       setIsSuccess(true);
+      success(`Product "${formData.name}" added successfully!`);
       
       // Reset form after a delay or let user navigate away
       setTimeout(() => {
@@ -80,7 +69,7 @@ export default function AddProductPage() {
 
     } catch (error) {
       console.error("Failed to categorize product:", error);
-      alert("Failed to categorize product. Please check your API key and try again.");
+      toastError("Failed to categorize product. Please try again.");
     } finally {
       setIsLoading(false);
     }

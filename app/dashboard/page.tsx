@@ -23,11 +23,14 @@ import {
   Trees,
   User,
   X,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db, Product, Proposal } from '@/lib/db';
+import { useStore, Product, Proposal } from '@/lib/db';
 import Link from 'next/link';
+import { ProposalDetailsModal } from '@/components/ProposalDetailsModal';
+import { useToast } from '@/components/ToastProvider';
 import { Button } from '@/components/ui/button';
 import { 
   BarChart, 
@@ -198,68 +201,6 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
   </motion.div>
 );
 
-const ProposalDetailsModal = ({ proposal, onClose }: { proposal: Proposal; onClose: () => void }) => {
-  if (!proposal) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
-      >
-        <div className="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-100">{proposal.clientName}</h2>
-            <p className="text-slate-400 text-sm">Generated on {new Date(proposal.createdAt || 0).toLocaleDateString()}</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 transition-colors">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        
-        <div className="p-8 max-h-[60vh] overflow-y-auto space-y-8">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-4 rounded-2xl bg-slate-800/30 border border-slate-800/50">
-              <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Budget</div>
-              <div className="text-xl font-bold text-slate-100">${proposal.budget.toLocaleString()}</div>
-            </div>
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <div className="text-xs text-emerald-500 uppercase tracking-wider mb-1">Total Cost</div>
-              <div className="text-xl font-bold text-emerald-400">${proposal.totalCost.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-bold text-slate-200 mb-4">Recommended Products</h3>
-            <div className="space-y-3">
-              {proposal.recommendedProducts.map((rp, idx) => (
-                <div key={idx} className="flex justify-between items-center p-4 rounded-xl bg-slate-800/20 border border-slate-800/40">
-                  <div>
-                    <div className="font-semibold text-slate-200">{rp.product}</div>
-                    <div className="text-xs text-slate-500">Quantity: {rp.quantity}</div>
-                  </div>
-                  <div className="font-bold text-slate-300">${rp.cost.toLocaleString()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-bold text-slate-200 mb-2">Impact Summary</h3>
-            <p className="text-slate-400 leading-relaxed italic">&quot;{proposal.impactSummary}&quot;</p>
-          </div>
-        </div>
-
-        <div className="p-6 bg-slate-950/50 border-t border-slate-800 flex justify-end gap-4">
-          <Button variant="outline" onClick={onClose} className="border-slate-800 text-slate-300">Close</Button>
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white">Download PDF</Button>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
 const ProductDetailsModal = ({ product, onClose }: { product: Product; onClose: () => void }) => {
   if (!product) return null;
 
@@ -285,7 +226,11 @@ const ProductDetailsModal = ({ product, onClose }: { product: Product; onClose: 
           </button>
         </div>
         
-        <div className="p-8 space-y-6">
+        <div 
+          data-lenis-prevent="true" 
+          onWheel={(e) => e.stopPropagation()}
+          className="p-8 max-h-[60vh] overflow-y-auto space-y-6"
+        >
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-slate-800/30 border border-slate-800/50">
               <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Price</div>
@@ -319,8 +264,7 @@ const ProductDetailsModal = ({ product, onClose }: { product: Product; onClose: 
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'proposals' | 'impact'>('overview');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const { products, proposals: rawProposals, db } = useStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -328,16 +272,36 @@ export default function DashboardPage() {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  const { success, error: toastError } = useToast();
+
+  const proposals = useMemo(() => {
+    return [...rawProposals].sort((a, b) => new Date(b.createdAt?.toMillis?.() || b.createdAt || 0).getTime() - new Date(a.createdAt?.toMillis?.() || a.createdAt || 0).getTime());
+  }, [rawProposals]);
+
+  const handleDeleteProposal = async (id: string, name: string) => {
+    console.log("Attempting to delete proposal:", id, name);
+    try {
+      await db.proposals.delete(id);
+      success(`Proposal for ${name} deleted successfully`);
+    } catch (err) {
+      console.error("Delete Proposal Error:", err);
+      toastError("Failed to delete proposal. Check console for details.");
+    }
+  };
+
+  const handleDeleteProduct = async (id: string, name: string) => {
+    console.log("Attempting to delete product:", id, name);
+    try {
+      await db.products.delete(id);
+      success(`Product "${name}" deleted successfully`);
+    } catch (err) {
+      console.error("Delete Product Error:", err);
+      toastError("Failed to delete product. Check console for details.");
+    }
+  };
+
   // Derived sidebar state
   const isExpanded = !isSidebarCollapsed || isSidebarHovered;
-
-  useEffect(() => {
-    const loadData = () => {
-      setProducts(db.products.getAll());
-      setProposals(db.proposals.getAll().sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
-    };
-    loadData();
-  }, []);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery) return products;
@@ -359,25 +323,31 @@ export default function DashboardPage() {
   }, [proposals, searchQuery]);
 
   const notifications = useMemo(() => {
-    const pNotifications = products.map(p => ({
-      id: `prod-${p.id}`,
-      title: 'New Product Added',
-      description: p.name,
-      time: new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: new Date(p.createdAt),
-      icon: Package,
-      color: 'purple'
-    }));
+    const pNotifications = products.map(p => {
+      const dateVal = p.createdAt?.toMillis?.() || Date.parse(p.createdAt) || 0;
+      return {
+        id: `prod-${p.id}`,
+        title: 'New Product Added',
+        description: p.name,
+        time: new Date(dateVal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: new Date(dateVal),
+        icon: Package,
+        color: 'purple'
+      };
+    });
 
-    const propNotifications = proposals.map(p => ({
-      id: `prop-${p.id}`,
-      title: 'New Proposal Generated',
-      description: `For ${p.clientName}`,
-      time: new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: new Date(p.createdAt),
-      icon: FileText,
-      color: 'blue'
-    }));
+    const propNotifications = proposals.map(p => {
+      const dateVal = p.createdAt?.toMillis?.() || Date.parse(p.createdAt) || 0;
+      return {
+        id: `prop-${p.id}`,
+        title: 'New Proposal Generated',
+        description: `For ${p.clientName}`,
+        time: new Date(dateVal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: new Date(dateVal),
+        icon: FileText,
+        color: 'blue'
+      };
+    });
 
     return [...pNotifications, ...propNotifications]
       .sort((a, b) => b.date.getTime() - a.date.getTime())
@@ -401,6 +371,49 @@ export default function DashboardPage() {
     const proposalWeight = 5;
     const score = (products.length * productWeight) + (proposals.length * proposalWeight);
     return Math.min(score, 100);
+  }, [products, proposals]);
+
+  const dailyGrowthData = useMemo(() => {
+    const dataMap: { [key: string]: { score: number, date: Date } } = {};
+    
+    products.forEach(p => {
+      const dateVal = p.createdAt?.toMillis?.() || (typeof p.createdAt === 'string' ? Date.parse(p.createdAt) : 0) || 0;
+      if (!dateVal) return;
+      const d = new Date(dateVal);
+      const dateKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      if (!dataMap[dateKey]) dataMap[dateKey] = { score: 0, date: d };
+      dataMap[dateKey].score += 2;
+    });
+
+    proposals.forEach(p => {
+      const dateVal = p.createdAt?.toMillis?.() || (typeof p.createdAt === 'string' ? Date.parse(p.createdAt) : 0) || 0;
+      if (!dateVal) return;
+      const d = new Date(dateVal);
+      const dateKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      if (!dataMap[dateKey]) dataMap[dateKey] = { score: 0, date: d };
+      dataMap[dateKey].score += 5;
+    });
+
+    const sortedDays = Object.values(dataMap).sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    const finalData: any[] = [];
+    let cumulativeSum = 0;
+    sortedDays.forEach((day, i) => {
+      cumulativeSum += day.score;
+      const percentage = Math.min(cumulativeSum * 5, 100); 
+      finalData.push({
+        label: `Day ${i + 1}`,
+        height: percentage,
+        percentage: percentage
+      });
+    });
+
+    // If no data, show a placeholder day with 0
+    if (finalData.length === 0) {
+      return [{ label: 'Day 1', height: 0, percentage: 0 }];
+    }
+
+    return finalData;
   }, [products, proposals]);
 
   const chartData = useMemo(() => [
@@ -666,7 +679,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <div className="font-semibold text-slate-200">{proposal.clientName}</div>
-                              <div className="text-xs text-slate-500">{new Date(proposal.createdAt || 0).toLocaleDateString()}</div>
+                                <div className="text-xs text-slate-500">{new Date(proposal.createdAt?.toMillis?.() || Date.parse(proposal.createdAt) || 0).toLocaleDateString()}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
@@ -679,6 +692,12 @@ export default function DashboardPage() {
                               className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-emerald-400 transition-colors"
                             >
                               <Eye className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); if(proposal.id) db.proposals.delete(proposal.id); }}
+                              className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
@@ -741,7 +760,12 @@ export default function DashboardPage() {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">{product.category}</div>
-                        <div className="font-bold text-slate-100">${product.price}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="font-bold text-slate-100">${product.price}</div>
+                          <button onClick={(e) => { e.stopPropagation(); if(product.id) handleDeleteProduct(product.id, product.name); }} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                       <h4 className="font-bold text-slate-200 mb-2 group-hover:text-emerald-400 transition-colors">{product.name}</h4>
                       <p className="text-sm text-slate-400 line-clamp-2 mb-4">{product.description}</p>
@@ -796,7 +820,7 @@ export default function DashboardPage() {
                         </div>
                         <div>
                           <div className="text-lg font-bold text-slate-100">{proposal.clientName}</div>
-                          <div className="text-sm text-slate-500">{proposal.recommendedProducts.length} items • {new Date(proposal.createdAt || 0).toLocaleDateString()}</div>
+                          <div className="text-sm text-slate-500">{proposal.recommendedProducts.length} items • {new Date(proposal.createdAt?.toMillis?.() || Date.parse(proposal.createdAt) || 0).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -809,6 +833,12 @@ export default function DashboardPage() {
                           className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-blue-400 transition-colors"
                         >
                           <Eye className="h-5 w-5" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); if(proposal.id) handleDeleteProposal(proposal.id, proposal.clientName); }}
+                          className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="h-5 w-5" />
                         </button>
                         <div className="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 text-xs font-bold">
                           APPROVED
@@ -860,22 +890,28 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-slate-950/50 rounded-3xl p-8 border border-slate-800/60">
-                  <h3 className="text-lg font-bold text-slate-200 mb-8">Sustainability Growth</h3>
-                  <div className="h-48 flex items-end justify-between gap-4">
-                    {[40, 70, 45, 90, 65, 80, 100].map((h, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-4">
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{ duration: 1, delay: i * 0.1 }}
-                          className="w-full bg-gradient-to-t from-emerald-600/40 to-emerald-400/80 rounded-t-xl relative group"
-                        >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-emerald-400">
-                            +{h}%
-                          </div>
-                        </motion.div>
-                        <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Day {i+1}</span>
+                <div className="bg-slate-950/50 rounded-3xl p-8 border border-slate-800/60 shadow-inner">
+                  <h3 className="text-lg font-bold text-slate-200 mb-8 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-emerald-400" />
+                    Sustainability Growth
+                  </h3>
+                  <div className="h-64 flex items-end justify-between gap-4 px-4 pb-4">
+                    {dailyGrowthData.map((d, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-6 h-full justify-end">
+                        <div className="w-full flex-1 flex flex-col justify-end">
+                          <motion.div 
+                            initial={{ height: 0 }}
+                            animate={{ height: `${d.height}%` }}
+                            transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
+                            className="w-full bg-gradient-to-t from-emerald-600/20 via-emerald-500/50 to-emerald-400 rounded-t-xl relative group shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                          >
+                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[10px] font-bold text-emerald-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-md shadow-xl whitespace-nowrap">
+                               +{Math.round(d.percentage)}% Growth
+                            </div>
+                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl" />
+                          </motion.div>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{d.label}</span>
                       </div>
                     ))}
                   </div>

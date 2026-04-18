@@ -24,6 +24,16 @@ export default function Home() {
   };
 
   const handleEmailSubmit = () => {
+    const email = emailInputRef.current?.value;
+    if (!email || !email.trim()) {
+      showToast("Please enter your work email instead.");
+      return;
+    }
+    // Simple email validation
+    if (!email.includes('@') || !email.includes('.')) {
+      showToast("Please enter a valid work email.");
+      return;
+    }
     showToast("Demo invitation sent! Check your email.");
   };
 

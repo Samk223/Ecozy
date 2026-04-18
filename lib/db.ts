@@ -1,15 +1,21 @@
-import { v4 as uuidv4 } from "uuid";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, where, doc, deleteDoc } from 'firebase/firestore';
+import { db as firestoreDb } from './firebase';
+import { useFirebase } from '@/components/FirebaseProvider';
+import { useMemo } from 'react';
 
 export interface AILog {
-  id: string;
+  id?: string;
+  userId: string;
   module: string;
   prompt: string;
   response: string;
-  timestamp: string;
+  timestamp: any;
 }
 
 export interface Product {
-  id: string;
+  id?: string;
+  userId: string;
   name: string;
   description: string;
   material: string;
@@ -19,11 +25,12 @@ export interface Product {
   subCategory: string;
   seoTags: string[];
   sustainabilityFilters: string[];
-  createdAt: string;
+  createdAt: any;
 }
 
 export interface Proposal {
-  id: string;
+  id?: string;
+  userId: string;
   clientName: string;
   budget: number;
   recommendedProducts: {
@@ -34,60 +41,92 @@ export interface Proposal {
   totalCost: number;
   budgetRemaining: number;
   impactSummary: string;
-  createdAt: string;
+  createdAt: any;
 }
 
-const isBrowser = typeof window !== "undefined";
+export const useStore = () => {
+  const { user } = useFirebase();
 
-const getStore = <T>(key: string): T[] => {
-  if (!isBrowser) return [];
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
-};
+  // Queries
+  const productsQuery = user ? query(collection(firestoreDb, 'products'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')) : null;
+  const proposalsQuery = user ? query(collection(firestoreDb, 'proposals'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')) : null;
+  const aiLogsQuery = user ? query(collection(firestoreDb, 'aiLogs'), where('userId', '==', user.uid), orderBy('timestamp', 'desc')) : null;
 
-const setStore = <T>(key: string, data: T[]) => {
-  if (!isBrowser) return;
-  localStorage.setItem(key, JSON.stringify(data));
-};
+  const [productsSnap, productsLoading] = useCollection(productsQuery);
+  const [proposalsSnap, proposalsLoading] = useCollection(proposalsQuery);
+  const [aiLogsSnap, aiLogsLoading] = useCollection(aiLogsQuery);
 
-export const db = {
-  products: {
-    getAll: () => getStore<Product>("products"),
-    add: (product: Omit<Product, "id" | "createdAt">) => {
-      const newProduct = {
-        ...product,
-        id: uuidv4(),
-        createdAt: new Date().toISOString(),
-      };
-      const products = getStore<Product>("products");
-      setStore("products", [...products, newProduct]);
-      return newProduct;
-    },
-  },
-  proposals: {
-    getAll: () => getStore<Proposal>("proposals"),
-    add: (proposal: Omit<Proposal, "id" | "createdAt">) => {
-      const newProposal = {
-        ...proposal,
-        id: uuidv4(),
-        createdAt: new Date().toISOString(),
-      };
-      const proposals = getStore<Proposal>("proposals");
-      setStore("proposals", [...proposals, newProposal]);
-      return newProposal;
-    },
-  },
-  aiLogs: {
-    getAll: () => getStore<AILog>("aiLogs"),
-    add: (log: Omit<AILog, "id" | "timestamp">) => {
-      const newLog = {
-        ...log,
-        id: uuidv4(),
-        timestamp: new Date().toISOString(),
-      };
-      const logs = getStore<AILog>("aiLogs");
-      setStore("aiLogs", [...logs, newLog]);
-      return newLog;
-    },
-  },
+  // Manually map IDs from snapshot
+  const products = useMemo(() => {
+    return (productsSnap?.docs || []).map((d) => ({
+      ...(d.data() as any),
+      id: d.id
+    })) as Product[];
+  }, [productsSnap]);
+
+  const proposals = useMemo(() => {
+    return (proposalsSnap?.docs || []).map((d) => ({
+      ...(d.data() as any),
+      id: d.id
+    })) as Proposal[];
+  }, [proposalsSnap]);
+
+  const aiLogs = useMemo(() => {
+    return (aiLogsSnap?.docs || []).map((d) => ({
+      ...(d.data() as any),
+      id: d.id
+    })) as AILog[];
+  }, [aiLogsSnap]);
+
+  return {
+    products,
+    productsLoading,
+    proposals,
+    proposalsLoading,
+    aiLogs,
+    aiLogsLoading,
+    db: {
+      products: {
+        add: async (product: Omit<Product, 'id' | 'createdAt' | 'userId'>) => {
+          if (!user) throw new Error("Must be logged in to add products");
+          const docRef = await addDoc(collection(firestoreDb, 'products'), {
+            ...product,
+            userId: user.uid,
+            createdAt: serverTimestamp(),
+          });
+          return docRef;
+        },
+        delete: async (id: string) => {
+          if (!user) throw new Error("Must be logged in to delete");
+          await deleteDoc(doc(firestoreDb, 'products', id));
+        }
+      },
+      proposals: {
+        add: async (proposal: Omit<Proposal, 'id' | 'createdAt' | 'userId'>) => {
+          if (!user) throw new Error("Must be logged in to add proposals");
+          const docRef = await addDoc(collection(firestoreDb, 'proposals'), {
+            ...proposal,
+            userId: user.uid,
+            createdAt: serverTimestamp(),
+          });
+          return docRef;
+        },
+        delete: async (id: string) => {
+          if (!user) throw new Error("Must be logged in to delete");
+          await deleteDoc(doc(firestoreDb, 'proposals', id));
+        }
+      },
+      aiLogs: {
+        add: async (log: Omit<AILog, 'id' | 'timestamp' | 'userId'>) => {
+          if (!user) throw new Error("Must be logged in to add logs");
+          const docRef = await addDoc(collection(firestoreDb, 'aiLogs'), {
+            ...log,
+            userId: user.uid,
+            timestamp: serverTimestamp(),
+          });
+          return docRef;
+        }
+      }
+    }
+  };
 };

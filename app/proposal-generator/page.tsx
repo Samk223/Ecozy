@@ -2,31 +2,81 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Loader2, FileText, Download, CheckCircle2, ArrowRight, History, Plus } from "lucide-react";
+import { Loader2, FileText, Download, CheckCircle2, ArrowRight, History, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { ProposalDetailsModal } from "@/components/ProposalDetailsModal";
 import { generateB2BProposal, ProposalInput, ProposalResult } from "@/lib/proposalEngine";
-import { db, Product, Proposal } from "@/lib/db";
+import { printProposalReport } from "@/lib/printReport";
+import { useStore, Product, Proposal } from "@/lib/db";
+import { useToast } from "@/components/ToastProvider";
 
 export default function ProposalGeneratorPage() {
+  const { products: availableProducts, proposals: rawProposals, db } = useStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
-  const [pastProposals, setPastProposals] = useState<Proposal[]>([]);
   const [viewMode, setViewMode] = useState<'create' | 'history'>('create');
   
+  const pastProposals = [...rawProposals].sort((a, b) => new Date(b.createdAt?.toMillis?.() || b.createdAt || 0).getTime() - new Date(a.createdAt?.toMillis?.() || a.createdAt || 0).getTime());
+
   const [formData, setFormData] = useState<ProposalInput>({
     clientName: "",
     budget: 0,
     categoryPreference: "",
   });
   const [aiResult, setAiResult] = useState<ProposalResult | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
 
-  useEffect(() => {
-    setAvailableProducts(db.products.getAll());
-    setPastProposals(db.proposals.getAll().sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
-  }, []);
+  const { success, error: toastError } = useToast();
+
+  const handleExportPDF = () => {
+    if (!aiResult) return;
+    printProposalReport({
+      clientName: formData.clientName,
+      budget: formData.budget,
+      ...aiResult,
+      createdAt: new Date()
+    });
+    success("PDF Report generated!");
+  };
+
+  const handleApproveProposal = async () => {
+    if (!aiResult) return;
+    setIsLoading(true);
+    try {
+      await db.proposals.add({
+        clientName: formData.clientName,
+        budget: formData.budget,
+        ...aiResult,
+      });
+      success(`Proposal for ${formData.clientName} approved and saved!`);
+      setViewMode('history');
+      setAiResult(null);
+      setFormData({
+        clientName: "",
+        budget: 0,
+        categoryPreference: "",
+      });
+    } catch (error) {
+      toastError("Failed to save proposal");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProposal = async (id: string, name: string) => {
+    try {
+      await db.proposals.delete(id);
+      success(`Proposal for ${name} deleted`);
+    } catch (err) {
+      toastError("Failed to delete proposal");
+    }
+  };
+
+  const handleDiscardProposal = () => {
+    setAiResult(null);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,45 +95,25 @@ export default function ProposalGeneratorPage() {
 
     setIsLoading(true);
     setAiResult(null);
+    success("AI is analyzing your catalog...");
 
     try {
       // 1. Call AI to generate proposal
       const { result, prompt, rawResponse } = await generateB2BProposal(formData, availableProducts);
       
-      // 2. Call API route to validate and save (demonstrates architecture)
-      const apiResponse = await fetch("/api/generate-proposal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientName: formData.clientName,
-          budget: formData.budget,
-          aiResult: result,
-          log: { prompt, rawResponse },
-        }),
-      });
-
-      if (!apiResponse.ok) {
-        throw new Error("API validation failed");
-      }
-
-      // 3. Save to local storage for UI persistence
-      db.aiLogs.add({
+      // 2. Save directly to Firestore using our secure hook
+      await db.aiLogs.add({
         module: "proposal-generator",
         prompt,
         response: rawResponse,
       });
 
-      db.proposals.add({
-        clientName: formData.clientName,
-        budget: formData.budget,
-        ...result,
-      });
-
-      setPastProposals(db.proposals.getAll().sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
+      // Show result for approval before saving
       setAiResult(result);
+      success("Proposal generated successfully!");
     } catch (error) {
       console.error("Failed to generate proposal:", error);
-      alert("Failed to generate proposal. Please check your API key and try again.");
+      toastError("Failed to generate proposal. Please check your API key.");
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +212,7 @@ export default function ProposalGeneratorPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card className="overflow-hidden border-emerald-900/50 shadow-[0_0_40px_-10px_rgba(16,185,129,0.2)] bg-slate-900/60 backdrop-blur-xl">
+                  <Card id="proposal-pdf-container" className="overflow-hidden border-emerald-900/50 shadow-[0_0_40px_-10px_rgba(16,185,129,0.2)] bg-slate-900/60 backdrop-blur-xl">
                     <div className="bg-emerald-950/40 px-6 py-8 border-b border-emerald-900/50 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
                       <div className="flex flex-col md:flex-row justify-between items-start mb-6 relative z-10">
@@ -227,14 +257,17 @@ export default function ProposalGeneratorPage() {
                         </table>
                       </div>
                     </CardContent>
-                    <CardFooter className="bg-slate-950/30 p-6 flex justify-end gap-4 border-t border-slate-800/60">
-                      <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <CardFooter className="bg-slate-950/30 p-6 flex flex-wrap justify-end gap-4 border-t border-slate-800/60">
+                      <Button variant="ghost" onClick={handleDiscardProposal} className="border-slate-800 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors">
+                        Discard
+                      </Button>
+                      <Button variant="outline" onClick={handleExportPDF} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                         <Download className="mr-2 h-4 w-4" />
                         Export PDF
                       </Button>
-                      <Button className="bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <Button onClick={handleApproveProposal} disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Approve Proposal
+                        Approve & Save
                       </Button>
                     </CardFooter>
                   </Card>
@@ -290,7 +323,7 @@ export default function ProposalGeneratorPage() {
                         <div className="flex justify-between items-start mb-2">
                           <CardTitle className="text-lg text-emerald-400 truncate pr-2">{proposal.clientName}</CardTitle>
                           <span className="text-xs text-slate-500 whitespace-nowrap bg-slate-950 px-2 py-1 rounded-md border border-slate-800">
-                            {new Date(proposal.createdAt || Date.now()).toLocaleDateString()}
+                            {new Date(proposal.createdAt?.toMillis?.() || Date.parse(proposal.createdAt) || 0).toLocaleDateString()}
                           </span>
                         </div>
                         <div className="flex justify-between items-end">
@@ -311,9 +344,17 @@ export default function ProposalGeneratorPage() {
                           </span>
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-0 pb-4">
-                        <Button variant="ghost" className="w-full text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                      <CardFooter className="pt-0 pb-4 flex gap-2">
+                        <Button onClick={() => setSelectedProposal(proposal)} variant="ghost" className="flex-1 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
                           View Details <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); if (proposal.id) handleDeleteProposal(proposal.id, proposal.clientName); }} 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </CardFooter>
                     </Card>
@@ -322,6 +363,15 @@ export default function ProposalGeneratorPage() {
               </div>
             )}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedProposal && (
+          <ProposalDetailsModal 
+             proposal={selectedProposal} 
+             onClose={() => setSelectedProposal(null)} 
+          />
         )}
       </AnimatePresence>
     </div>
