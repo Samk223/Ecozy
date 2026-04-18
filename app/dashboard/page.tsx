@@ -292,8 +292,8 @@ const ProductDetailsModal = ({ product, onClose }: { product: Product; onClose: 
               <div className="text-xl font-bold text-slate-100">${product.price.toLocaleString()}</div>
             </div>
             <div className="p-4 rounded-2xl bg-slate-800/30 border border-slate-800/50">
-              <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Stock</div>
-              <div className="text-xl font-bold text-slate-100">{product.stock} units</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Weight</div>
+              <div className="text-xl font-bold text-slate-100">{product.weight} kg</div>
             </div>
           </div>
 
