@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageCircle, X, Send, Bot, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GoogleGenAI } from "@google/genai";
+import { getAIClient } from "@/lib/aiClient";
 import { useRouter } from "next/navigation";
 
 type Message = {
@@ -14,8 +14,6 @@ type Message = {
   content: string;
   timestamp: Date;
 };
-
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
 const ChatMessage = memo(({ msg }: { msg: Message }) => {
   const [copied, setCopied] = useState(false);
@@ -92,6 +90,7 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
+      const ai = getAIClient();
       const chat = ai.chats.create({
         model: "gemini-3-flash-preview",
         config: {
