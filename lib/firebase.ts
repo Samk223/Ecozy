@@ -17,11 +17,11 @@ const firebaseConfig = {
 const databaseId = process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId;
 
 // Validate configuration before initializing to prevent app crash
-const isConfigValid = !!(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
+// const isConfigValid = !!(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 
-if (!isConfigValid) {
-  console.error("Firebase Configuration is missing or incomplete. Some features may not work. Please check your environment variables or firebase-applet-config.json.");
-}
+// if (!isConfigValid) {
+//   console.error("Firebase Configuration is missing or incomplete. Some features may not work. Please check your environment variables or firebase-applet-config.json.");
+// }
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, databaseId);
