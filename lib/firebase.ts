@@ -23,5 +23,5 @@ const databaseId = process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID;
 // }
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, databaseId);
+export const db = getFirestore(app);
 export const auth = getAuth(app);
