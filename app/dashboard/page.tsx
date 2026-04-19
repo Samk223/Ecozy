@@ -355,9 +355,9 @@ export default function DashboardPage() {
   }, [products, proposals]);
 
   const totalImpact = useMemo(() => {
-    // Base values + simulated growth from proposals
-    const baseCO2 = 12.5;
-    const basePlastic = 450;
+    // Zero base values - impact is purely derived from user data
+    const baseCO2 = 0;
+    const basePlastic = 0;
     const proposalCount = proposals.length;
     
     return {
@@ -586,28 +586,28 @@ export default function DashboardPage() {
                   <StatCard 
                     title="Total Products" 
                     value={products.length} 
-                    change="+4.5%" 
+                    change={`+${products.length > 0 ? (products.length * 1.5).toFixed(1) : '0'}%`} 
                     icon={Package} 
                     color="emerald" 
                   />
                   <StatCard 
                     title="Active Proposals" 
                     value={proposals.length} 
-                    change="+12.2%" 
+                    change={`+${proposals.length > 0 ? (proposals.length * 2.1).toFixed(1) : '0'}%`} 
                     icon={FileText} 
                     color="blue" 
                   />
                   <StatCard 
                     title="CO2 Offset" 
                     value={`${totalImpact.co2} Tons`} 
-                    change="+15.3%" 
+                    change={`+${totalImpact.co2 !== "0.0" ? (parseFloat(totalImpact.co2) * 1.2).toFixed(1) : '0'}%`} 
                     icon={Leaf} 
                     color="emerald" 
                   />
                   <StatCard 
                     title="Plastic Diverted" 
                     value={`${totalImpact.plastic} kg`} 
-                    change="+8.2%" 
+                    change={`+${totalImpact.plastic > 0 ? (totalImpact.plastic * 0.05).toFixed(1) : '0'}%`} 
                     icon={Zap} 
                     color="amber" 
                   />
@@ -868,54 +868,81 @@ export default function DashboardPage() {
               >
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-2xl font-bold text-slate-100">Impact Report</h2>
-                  <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold uppercase tracking-wider">
-                    Live Metrics
+                  <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                    {products.length === 0 && proposals.length === 0 ? 'Getting Started' : 'Live Metrics'}
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                  <div className="p-8 rounded-3xl bg-slate-800/30 border border-slate-800/50 flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
-                      <Globe className="h-8 w-8 text-blue-400" />
+                {products.length === 0 && proposals.length === 0 ? (
+                  <div className="py-20 flex flex-col items-center text-center max-w-md mx-auto">
+                    <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mb-6 relative">
+                      <Sprout className="h-10 w-10 text-emerald-400/50" />
+                      <div className="absolute inset-0 bg-emerald-400/10 blur-2xl rounded-full animate-pulse" />
                     </div>
-                    <div className="text-4xl font-extrabold text-slate-100 mb-2">{totalImpact.co2} Tons</div>
-                    <div className="text-slate-400 font-medium">Estimated CO2 Offset</div>
-                  </div>
-                  <div className="p-8 rounded-3xl bg-slate-800/30 border border-slate-800/50 flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
-                      <Leaf className="h-8 w-8 text-emerald-400" />
+                    <h3 className="text-xl font-bold text-slate-200 mb-3">Your Journey Begins Here</h3>
+                    <p className="text-slate-400 mb-8 leading-relaxed">
+                      Your impact data is generated as you add sustainable products to your catalog and create B2B proposals.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                      <Link href="/products/new" className="flex-1">
+                        <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
+                          Add First Product
+                        </Button>
+                      </Link>
+                      <Link href="/proposal-generator" className="flex-1">
+                        <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl">
+                          Create Proposal
+                        </Button>
+                      </Link>
                     </div>
-                    <div className="text-4xl font-extrabold text-slate-100 mb-2">{totalImpact.plastic} kg</div>
-                    <div className="text-slate-400 font-medium">Plastic Waste Diverted</div>
                   </div>
-                </div>
-
-                <div className="bg-slate-950/50 rounded-3xl p-8 border border-slate-800/60 shadow-inner">
-                  <h3 className="text-lg font-bold text-slate-200 mb-8 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    Sustainability Growth
-                  </h3>
-                  <div className="h-64 flex items-end justify-between gap-4 px-4 pb-4">
-                    {dailyGrowthData.map((d, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-6 h-full justify-end">
-                        <div className="w-full flex-1 flex flex-col justify-end">
-                          <motion.div 
-                            initial={{ height: 0 }}
-                            animate={{ height: `${d.height}%` }}
-                            transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
-                            className="w-full bg-gradient-to-t from-emerald-600/20 via-emerald-500/50 to-emerald-400 rounded-t-xl relative group shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                          >
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[10px] font-bold text-emerald-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-md shadow-xl whitespace-nowrap">
-                               +{Math.round(d.percentage)}% Growth
-                            </div>
-                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl" />
-                          </motion.div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                      <div className="p-8 rounded-3xl bg-slate-800/30 border border-slate-800/50 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+                          <Globe className="h-8 w-8 text-blue-400" />
                         </div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{d.label}</span>
+                        <div className="text-4xl font-extrabold text-slate-100 mb-2">{totalImpact.co2} Tons</div>
+                        <div className="text-slate-400 font-medium">Estimated CO2 Offset</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="p-8 rounded-3xl bg-slate-800/30 border border-slate-800/50 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+                          <Leaf className="h-8 w-8 text-emerald-400" />
+                        </div>
+                        <div className="text-4xl font-extrabold text-slate-100 mb-2">{totalImpact.plastic} kg</div>
+                        <div className="text-slate-400 font-medium">Plastic Waste Diverted</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/50 rounded-3xl p-8 border border-slate-800/60 shadow-inner">
+                      <h3 className="text-lg font-bold text-slate-200 mb-8 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-emerald-400" />
+                        Sustainability Growth
+                      </h3>
+                      <div className="h-64 flex items-end justify-between gap-4 px-4 pb-4">
+                        {dailyGrowthData.map((d, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-6 h-full justify-end">
+                            <div className="w-full flex-1 flex flex-col justify-end">
+                              <motion.div 
+                                initial={{ height: 0 }}
+                                animate={{ height: `${d.height}%` }}
+                                transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
+                                className="w-full bg-gradient-to-t from-emerald-600/20 via-emerald-500/50 to-emerald-400 rounded-t-xl relative group shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                              >
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[10px] font-bold text-emerald-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-md shadow-xl whitespace-nowrap">
+                                   +{Math.round(d.percentage)}% Growth
+                                </div>
+                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl" />
+                              </motion.div>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{d.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
