@@ -24,7 +24,8 @@ import {
   User,
   X,
   Eye,
-  Trash2
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStore, Product, Proposal } from '@/lib/db';
@@ -868,34 +869,51 @@ export default function DashboardPage() {
               >
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-2xl font-bold text-slate-100">Impact Report</h2>
-                  <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                  <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold uppercase tracking-wider">
                     {products.length === 0 && proposals.length === 0 ? 'Getting Started' : 'Live Metrics'}
                   </div>
                 </div>
                 
                 {products.length === 0 && proposals.length === 0 ? (
-                  <div className="py-20 flex flex-col items-center text-center max-w-md mx-auto">
-                    <div className="w-20 h-20 rounded-3xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mb-6 relative">
-                      <Sprout className="h-10 w-10 text-emerald-400/50" />
-                      <div className="absolute inset-0 bg-emerald-400/10 blur-2xl rounded-full animate-pulse" />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-20 text-center max-w-2xl mx-auto"
+                  >
+                    <div className="relative mb-12">
+                      <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                      <div className="relative w-32 h-32 rounded-full border-4 border-slate-800 bg-slate-900/50 flex items-center justify-center shadow-2xl">
+                         <Sparkles className="h-16 w-16 text-emerald-400 animate-bounce" />
+                      </div>
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -inset-4 border border-dashed border-emerald-500/30 rounded-full"
+                      />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-200 mb-3">Your Journey Begins Here</h3>
-                    <p className="text-slate-400 mb-8 leading-relaxed">
-                      Your impact data is generated as you add sustainable products to your catalog and create B2B proposals.
+                    
+                    <h3 className="text-3xl font-black text-slate-100 mb-4 tracking-tight">Your Journey Begins Here</h3>
+                    <p className="text-lg text-slate-400 mb-12 leading-relaxed">
+                      Your impact report is currently a blank canvas. Start populating your catalog and generating proposals to see your sustainability metrics come to life in real-time.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full">
-                      <Link href="/products/new" className="flex-1">
-                        <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
-                          Add First Product
-                        </Button>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                      <Link href="/products/add" className="contents">
+                        <button className="flex flex-col items-center p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all group">
+                          <Package className="h-8 w-8 text-emerald-400 mb-4 group-hover:scale-110 transition-transform" />
+                          <span className="font-bold text-slate-100 mb-1">Add Your First Product</span>
+                          <span className="text-xs text-slate-400">Initialize your sustainable catalog</span>
+                        </button>
                       </Link>
-                      <Link href="/proposal-generator" className="flex-1">
-                        <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl">
-                          Create Proposal
-                        </Button>
+                      <Link href="/proposal-generator" className="contents">
+                        <button className="flex flex-col items-center p-6 rounded-3xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all group">
+                          <FileText className="h-8 w-8 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
+                          <span className="font-bold text-slate-100 mb-1">Create Your First Proposal</span>
+                          <span className="text-xs text-slate-400">Calculate your environmental impact</span>
+                        </button>
                       </Link>
                     </div>
-                  </div>
+                  </motion.div>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">

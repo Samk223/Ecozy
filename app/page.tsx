@@ -282,54 +282,81 @@ export default function Home() {
                 {activeTab === 'impact' && (
                   <motion.div 
                     key="impact"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full flex flex-col"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.4 }}
+                    className="h-full flex flex-col gap-6"
                   >
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-2xl font-bold text-slate-100">Impact Report</h2>
-                      <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
-                        Q3 2026
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <h2 className="text-sm font-mono text-emerald-500 uppercase tracking-widest mb-1">Impact Analytics</h2>
+                        <h3 className="text-2xl font-bold text-slate-100 italic">Environmental ROI</h3>
+                      </div>
+                      <div className="px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono whitespace-nowrap">
+                        REAL-TIME SYNC • Q3 2026
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+
+                    <div className="grid grid-cols-2 gap-4">
                       <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="p-4 rounded-xl border border-slate-800/60 bg-slate-800/20 flex flex-col items-center justify-center text-center"
+                        className="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 relative overflow-hidden group"
                       >
-                        <Globe className="w-8 h-8 text-blue-400 mb-2" />
-                        <div className="text-2xl font-bold text-slate-200 mb-1">12.5 Tons</div>
-                        <div className="text-xs text-slate-400">CO2 Offset</div>
+                        <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Globe className="w-12 h-12 text-blue-400" />
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-500 uppercase tracking-tighter mb-1">Total Carbon Offset</div>
+                        <div className="text-3xl font-bold text-slate-100 mb-1">12.5 <span className="text-sm font-normal text-slate-500">tCO2e</span></div>
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+                          <Zap className="w-3 h-3" /> +14.2% vs last month
+                        </div>
                       </motion.div>
+
                       <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="p-4 rounded-xl border border-slate-800/60 bg-slate-800/20 flex flex-col items-center justify-center text-center"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 relative overflow-hidden group"
                       >
-                        <Leaf className="w-8 h-8 text-emerald-400 mb-2" />
-                        <div className="text-2xl font-bold text-slate-200 mb-1">450 kg</div>
-                        <div className="text-xs text-slate-400">Plastic Diverted</div>
+                        <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Recycle className="w-12 h-12 text-emerald-400" />
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-500 uppercase tracking-tighter mb-1">Waste Diverted</div>
+                        <div className="text-3xl font-bold text-slate-100 mb-1">450 <span className="text-sm font-normal text-slate-500">kg</span></div>
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+                          <Zap className="w-3 h-3" /> +22.0% vs last month
+                        </div>
                       </motion.div>
                     </div>
-                    <div className="flex-1 rounded-xl border border-slate-800/60 bg-slate-800/20 p-4 flex items-end gap-2 justify-between">
-                      {[40, 70, 45, 90, 65, 80, 100].map((h, i) => (
-                        <motion.div 
-                          key={i} 
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
-                          className="w-full bg-gradient-to-t from-emerald-600/50 to-emerald-400/80 rounded-t-sm relative group" 
-                        >
-                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 text-xs text-emerald-400 transition-opacity">
-                             +{h}
-                           </div>
-                        </motion.div>
-                      ))}
+
+                    <div className="flex-1 rounded-2xl border border-slate-800 bg-slate-950/50 p-6 flex flex-col gap-4">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase">Weekly Progress</span>
+                        <div className="flex gap-2">
+                           <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                           <div className="w-2 h-2 rounded-full bg-blue-400" />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex items-end gap-3 justify-between pt-4">
+                        {[40, 75, 55, 95, 65, 85, 100].map((h, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                            <motion.div 
+                              initial={{ height: 0 }}
+                              animate={{ height: `${h}%` }}
+                              transition={{ duration: 1, delay: 0.5 + i * 0.1, ease: 'circOut' }}
+                              className="w-full bg-gradient-to-t from-emerald-600/40 via-emerald-500 to-emerald-400 rounded-lg relative shadow-[0_0_20px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all" 
+                            >
+                               <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 text-[10px] font-mono text-emerald-400 transition-opacity">
+                                 {h}%
+                               </div>
+                            </motion.div>
+                            <span className="text-[8px] font-mono text-slate-600 group-hover:text-slate-400 uppercase tracking-tighter">Day 0{i+1}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -342,63 +369,89 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* CONGRATULATORY SECTION (Redesigned) */}
-      <section className="py-32 relative overflow-hidden bg-[#060b14] border-y border-slate-800/50">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/10 via-transparent to-emerald-950/10 pointer-events-none" />
-        <div className="container mx-auto px-4 relative z-10 text-center max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">Welcome to the world of <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">sustainability.</span></h2>
-            <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-16">
-              You are taking a massive step towards a greener future. By automating your sustainable commerce operations, you&apos;re scaling impact without scaling effort. Let AI handle the heavy lifting so you can focus on saving the planet.
-            </p>
-          </motion.div>
+      {/* IMPACT / CONGRATULATORY SECTION */}
+      <section className="py-40 relative overflow-hidden bg-[#060b14]">
+        {/* Abstract background elements */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center mb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-sm font-mono text-emerald-500 uppercase tracking-[0.3em] mb-6">Collective Impact</h2>
+              <h3 className="text-4xl md:text-6xl font-bold mb-8 text-white tracking-tight leading-[1.1]">
+                Leading the world towards a <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">conscious future.</span>
+              </h3>
+              <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto">
+                By automating your eco-commerce workflows, you aren&apos;t just saving time—you&apos;re accelerating the global transition to a circular economy.
+              </p>
+            </motion.div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl flex flex-col items-center text-center group hover:-translate-y-4 hover:border-emerald-500/40 transition-all duration-700 ease-in-out shadow-xl"
+              className="relative group"
             >
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-500 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-                <Recycle className="w-8 h-8 text-emerald-400" />
+              <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-all duration-700 blur-xl" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-500">
+                  <Recycle className="w-7 h-7 text-emerald-400" />
+                </div>
+                <h4 className="text-2xl font-bold text-white mb-4 italic">Circular Scale</h4>
+                <p className="text-slate-400 leading-relaxed">Prioritize products that fit the circular economy. We help you transition from linear waste to infinite reuse at scale.</p>
+                <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-emerald-500/50 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500" /> Verified Metric
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-100 mb-3">Zero Waste</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Automatically filter and prioritize products that meet strict zero-waste and circular economy criteria.</p>
             </motion.div>
 
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl flex flex-col items-center text-center group hover:-translate-y-4 hover:border-blue-500/40 transition-all duration-700 ease-in-out shadow-xl"
+              className="relative group"
             >
-              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-500 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
-                <CloudRain className="w-8 h-8 text-blue-400" />
+              <div className="absolute -inset-4 bg-blue-500/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-all duration-700 blur-xl" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-500">
+                  <CloudRain className="w-7 h-7 text-blue-400" />
+                </div>
+                <h4 className="text-2xl font-bold text-white mb-4 italic">Carbon Logic</h4>
+                <p className="text-slate-400 leading-relaxed">Our AI intelligence maps the carbon cost of every SKU, ensuring your proposals are as green as they are profitable.</p>
+                <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-blue-500/50 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-blue-500" /> Offset Verified
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-100 mb-3">Carbon Neutral</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Generate proposals that calculate and offset carbon footprints for every bulk B2B order.</p>
             </motion.div>
 
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl flex flex-col items-center text-center group hover:-translate-y-4 hover:border-amber-500/40 transition-all duration-700 ease-in-out shadow-xl"
+              className="relative group"
             >
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-500 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-                <HeartHandshake className="w-8 h-8 text-amber-400" />
+              <div className="absolute -inset-4 bg-amber-500/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-all duration-700 blur-xl" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-500">
+                  <HeartHandshake className="w-7 h-7 text-amber-400" />
+                </div>
+                <h4 className="text-2xl font-bold text-white mb-4 italic">Ethical IQ</h4>
+                <p className="text-slate-400 leading-relaxed">Go beyond labels. We vet supply chains using decentralized data to ensure human rights are never a trade-off.</p>
+                <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-amber-500/50 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-amber-500" /> Audit Ready
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-100 mb-3">Ethical Sourcing</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Ensure every product recommended in your catalog comes from verified, ethical supply chains.</p>
             </motion.div>
           </div>
         </div>
@@ -412,66 +465,64 @@ export default function Home() {
             <p className="text-xl text-slate-400">A seamless flow from raw product to closed B2B deal.</p>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-4 lg:gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-4 lg:gap-12">
             {/* Step 1 */}
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex-1 w-full max-w-sm p-8 rounded-3xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-xl relative group hover:border-emerald-500/50 hover:-translate-y-2 transition-all duration-500 ease-in-out shadow-xl"
+              className="flex-1 w-full max-w-sm p-10 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 backdrop-blur-xl relative group hover:border-emerald-500/50 hover:-translate-y-2 transition-all duration-700 ease-in-out shadow-2xl"
             >
-              <div className="absolute -top-6 -left-6 w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-xl font-bold text-emerald-400 z-10 shadow-lg">1</div>
-              <Package className="w-12 h-12 text-emerald-400 mb-6 group-hover:scale-110 transition-transform duration-500" />
-              <h3 className="text-2xl font-bold mb-3">Upload Product</h3>
-              <p className="text-slate-400 leading-relaxed">Input basic details like name, material, and price. Our AI instantly categorizes it, generates SEO tags, and identifies key sustainability filters.</p>
-            </motion.div>
-
-            {/* Arrow */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="hidden md:flex items-center justify-center text-slate-600"
-            >
-              <ArrowRight className="w-8 h-8" />
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-2xl bg-[#060b14] border border-slate-700 flex items-center justify-center text-xl font-bold text-emerald-400 z-10 shadow-xl group-hover:scale-110 group-hover:border-emerald-500/50 transition-all duration-500">01</div>
+              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Package className="w-24 h-24 text-emerald-400" />
+              </div>
+              <Package className="w-12 h-12 text-emerald-500 mb-8 group-hover:scale-110 transition-transform duration-500" />
+              <h3 className="text-2xl font-bold mb-4 italic text-white">Upload Catalog</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">Input basic details like material and price. Our AI instantly categorizes it, identifies sustainability scores, and identifies key filters.</p>
+              <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-emerald-500/40 uppercase tracking-widest">
+                Automated Enrichment
+              </div>
             </motion.div>
 
             {/* Step 2 */}
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="flex-1 w-full max-w-sm p-8 rounded-3xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-xl relative group hover:border-blue-500/50 hover:-translate-y-2 transition-all duration-500 ease-in-out shadow-xl"
+              className="flex-1 w-full max-w-sm p-10 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 backdrop-blur-xl relative group hover:border-blue-500/50 hover:-translate-y-2 transition-all duration-700 ease-in-out shadow-2xl"
             >
-              <div className="absolute -top-6 -left-6 w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-xl font-bold text-blue-400 z-10 shadow-lg">2</div>
-              <FileText className="w-12 h-12 text-blue-400 mb-6 group-hover:scale-110 transition-transform duration-500" />
-              <h3 className="text-2xl font-bold mb-3">Set Client Budget</h3>
-              <p className="text-slate-400 leading-relaxed">Enter a B2B client&apos;s name and budget. The AI scans your structured catalog to find the optimal mix of sustainable products.</p>
-            </motion.div>
-
-            {/* Arrow */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="hidden md:flex items-center justify-center text-slate-600"
-            >
-              <ArrowRight className="w-8 h-8" />
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-2xl bg-[#060b14] border border-slate-700 flex items-center justify-center text-xl font-bold text-blue-400 z-10 shadow-xl group-hover:scale-110 group-hover:border-blue-500/50 transition-all duration-500">02</div>
+              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                <FileText className="w-24 h-24 text-blue-400" />
+              </div>
+              <FileText className="w-12 h-12 text-blue-500 mb-8 group-hover:scale-110 transition-transform duration-500" />
+              <h3 className="text-2xl font-bold mb-4 italic text-white">Define Parameters</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">Enter client budget and target impact goals. The AI scans your structured catalog to find the optimal mix of sustainable alternatives.</p>
+              <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-blue-500/40 uppercase tracking-widest">
+                Intelligent Matching
+              </div>
             </motion.div>
 
             {/* Step 3 */}
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
-              className="flex-1 w-full max-w-sm p-8 rounded-3xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-xl relative group hover:border-amber-500/50 hover:-translate-y-2 transition-all duration-500 ease-in-out shadow-xl"
+              className="flex-1 w-full max-w-sm p-10 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 backdrop-blur-xl relative group hover:border-amber-500/50 hover:-translate-y-2 transition-all duration-700 ease-in-out shadow-2xl"
             >
-              <div className="absolute -top-6 -left-6 w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-xl font-bold text-amber-400 z-10 shadow-lg">3</div>
-              <CheckCircle2 className="w-12 h-12 text-amber-400 mb-6 group-hover:scale-110 transition-transform duration-500" />
-              <h3 className="text-2xl font-bold mb-3">Generate Proposal</h3>
-              <p className="text-slate-400 leading-relaxed">Instantly receive a detailed proposal with cost breakdown, budget allocation, and a compelling environmental impact summary.</p>
+              <div className="absolute -top-5 -left-5 w-14 h-14 rounded-2xl bg-[#060b14] border border-slate-700 flex items-center justify-center text-xl font-bold text-amber-400 z-10 shadow-xl group-hover:scale-110 group-hover:border-amber-500/50 transition-all duration-500">03</div>
+              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                <CheckCircle2 className="w-24 h-24 text-amber-400" />
+              </div>
+              <CheckCircle2 className="w-12 h-12 text-amber-500 mb-8 group-hover:scale-110 transition-transform duration-500" />
+              <h3 className="text-2xl font-bold mb-4 italic text-white">Ship Proposal</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">Instantly receive a detailed B2B proposal with cost breakdown, budget allocation, and a compelling environmental impact summary.</p>
+              <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-amber-500/40 uppercase tracking-widest">
+                Closing Sequence
+              </div>
             </motion.div>
           </div>
         </div>
