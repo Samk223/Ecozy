@@ -779,10 +779,26 @@ export default function DashboardPage() {
                   ))}
                   {filteredProducts.length === 0 && (
                     <div className="col-span-full py-20 text-center">
-                      <Package className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                      <p className="text-slate-500">
-                        {searchQuery ? `No products matching "${searchQuery}"` : 'No products found in your catalog.'}
+                      <div className="relative mb-8 inline-block">
+                        <div className="absolute inset-0 bg-emerald-500/10 blur-xl rounded-full scale-110" />
+                        <div className="relative w-24 h-24 rounded-full border-2 border-slate-800 bg-slate-900 flex items-center justify-center shadow-lg mx-auto">
+                          <Package className="h-10 w-10 text-emerald-500" />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-100 mb-2">
+                        {searchQuery ? `No products matching "${searchQuery}"` : 'Your catalog is empty'}
+                      </h3>
+                      <p className="text-slate-400 mb-8 max-w-sm mx-auto">
+                        {searchQuery ? 'Try adjusting your search terms.' : 'Add your first sustainable product to start building your eco-friendly catalog and tracking your impact.'}
                       </p>
+                      {!searchQuery && (
+                        <Link href="/products/add">
+                           <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full px-8 transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                              <Plus className="w-5 h-5 mr-2" />
+                              Add Your First Product
+                           </Button>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>
@@ -849,10 +865,26 @@ export default function DashboardPage() {
                   ))}
                   {filteredProposals.length === 0 && (
                     <div className="py-20 text-center">
-                      <FileText className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                      <p className="text-slate-500">
-                        {searchQuery ? `No proposals matching "${searchQuery}"` : 'No proposals have been generated yet.'}
+                      <div className="relative mb-8 inline-block">
+                        <div className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full scale-110" />
+                        <div className="relative w-24 h-24 rounded-full border-2 border-slate-800 bg-slate-900 flex items-center justify-center shadow-lg mx-auto">
+                          <FileText className="h-10 w-10 text-blue-500" />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-100 mb-2">
+                        {searchQuery ? `No proposals matching "${searchQuery}"` : 'No proposals yet'}
+                      </h3>
+                      <p className="text-slate-400 mb-8 max-w-sm mx-auto">
+                        {searchQuery ? 'Try adjusting your search terms.' : 'Generate your first B2B proposal to offer compelling eco-friendly packages to your clients.'}
                       </p>
+                      {!searchQuery && (
+                        <Link href="/proposal-generator">
+                           <Button className="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-8 transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(37,99,235,0.4)]">
+                              <Sparkles className="w-5 h-5 mr-2" />
+                              Generate First Proposal
+                           </Button>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>

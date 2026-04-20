@@ -11,10 +11,12 @@ import { ProposalDetailsModal } from "@/components/ProposalDetailsModal";
 import { generateB2BProposal, ProposalInput, ProposalResult } from "@/lib/proposalEngine";
 import { printProposalReport } from "@/lib/printReport";
 import { useStore, Product, Proposal } from "@/lib/db";
+import { useFirebase } from "@/components/FirebaseProvider";
 import { useToast } from "@/components/ToastProvider";
 
 export default function ProposalGeneratorPage() {
   const { products: availableProducts, proposals: rawProposals, db } = useStore();
+  const { user } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'create' | 'history'>('create');
   
@@ -90,6 +92,11 @@ export default function ProposalGeneratorPage() {
     e.preventDefault();
     if (availableProducts.length === 0) {
       alert("No products available in the catalog. Please add some products first.");
+      return;
+    }
+
+    if (!user) {
+      toastError("You must Sign In to generate a proposal.");
       return;
     }
 

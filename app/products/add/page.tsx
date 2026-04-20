@@ -11,12 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { generateProductCategorization, ProductInput, CategorizationResult } from "@/lib/categorizer";
 import { useStore } from "@/lib/db";
+import { useFirebase } from "@/components/FirebaseProvider";
 import { useToast } from "@/components/ToastProvider";
 import Link from "next/link";
 
 export default function AddProductPage() {
   const router = useRouter();
   const { db } = useStore();
+  const { user } = useFirebase();
   const { success, error: toastError } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -39,6 +41,12 @@ export default function AddProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toastError("You must Sign In to add a product.");
+      return;
+    }
+
     setIsLoading(true);
     setAiResult(null);
 
@@ -71,6 +79,8 @@ export default function AddProductPage() {
       console.error("Failed to categorize product:", error);
       if (error?.message?.includes("exceeded") || error?.message?.includes("429")) {
         toastError("AI Quota Exceeded. Please try again in a few seconds or check your Gemini API plan.");
+      } else if (error?.message?.toLowerCase().includes("logged in") || error?.message?.includes("permission")) {
+        toastError("You must Sign In to add a product.");
       } else {
         toastError("Failed to categorize product. Please try again.");
       }
