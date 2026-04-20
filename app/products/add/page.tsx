@@ -67,9 +67,13 @@ export default function AddProductPage() {
         router.push("/products");
       }, 3000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to categorize product:", error);
-      toastError("Failed to categorize product. Please try again.");
+      if (error?.message?.includes("exceeded") || error?.message?.includes("429")) {
+        toastError("AI Quota Exceeded. Please try again in a few seconds or check your Gemini API plan.");
+      } else {
+        toastError("Failed to categorize product. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

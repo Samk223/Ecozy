@@ -111,9 +111,13 @@ export default function ProposalGeneratorPage() {
       // Show result for approval before saving
       setAiResult(result);
       success("Proposal generated successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to generate proposal:", error);
-      toastError("Failed to generate proposal. Please check your API key.");
+      if (error?.message?.includes("exceeded") || error?.message?.includes("429")) {
+        toastError("AI Quota Exceeded. Please try again in a few seconds or check your Gemini API plan.");
+      } else {
+        toastError("Failed to generate proposal. Please check your API key.");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -37,7 +37,7 @@ Suggest sustainability filters (e.g., plastic-free, compostable, recyclable, veg
   `.trim();
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
